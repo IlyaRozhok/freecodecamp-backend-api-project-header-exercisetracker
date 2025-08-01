@@ -2,8 +2,8 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 require("dotenv").config();
-const { createAndSaveUser, fetchUsers } = require("./model/User");
-const { createExercise } = require("./model/Exercise");
+const { createAndSaveUser, fetchUsers, User } = require("./model/User");
+const { createExercise, Exercise } = require("./model/Exercise");
 
 const mongoose = require("mongoose");
 
@@ -48,11 +48,75 @@ app.post("/api/users/:_id/exercises", async (req, res) => {
   try {
     const id = req.params._id;
     const { description, duration, date } = req.body;
-    const payload = { description, duration, date, _id: id };
-    const createdExercise = await createExercise(payload);
-    res.json(createdExercise);
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const exerciseDate = date ? new Date(date) : new Date();
+
+    const exercise = await createExercise({
+      description,
+      duration: Number(duration),
+      date: exerciseDate,
+      _id: id,
+    });
+
+    res.json({
+      username: user.username,
+      description: exercise.description,
+      duration: exercise.duration,
+      date: exercise.date.toDateString(),
+      _id: user._id,
+    });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Failed to create an exercise" });
+  }
+});
+
+app.get("/api/users/:_id/logs", async (req, res) => {
+  try {
+    const id = req.params._id;
+    const { from, to, limit } = req.query;
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    let query = { userId: id };
+
+    if (from || to) {
+      query.date = {};
+      if (from) {
+        query.date.$gte = new Date(from);
+      }
+      if (to) {
+        query.date.$lte = new Date(to);
+      }
+    }
+
+    let exerciseQuery = Exercise.find(query).sort({ date: 1 });
+
+    if (limit) {
+      exerciseQuery = exerciseQuery.limit(Number(limit));
+    }
+
+    const exercises = await exerciseQuery;
+
+    const log = exercises.map((e) => ({
+      description: e.description,
+      duration: e.duration,
+      date: e.date.toDateString(),
+    }));
+
+    res.json({
+      username: user.username,
+      count: log.length,
+      _id: user._id,
+      log,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch logs" });
   }
 });
 
