@@ -11,7 +11,13 @@ const createAndSaveUser = async (userName) => {
   return await user.save();
 };
 
+const fetchUsers = async () => {
+  const users = User.find();
+  return await users;
+};
+
 module.exports = {
   User,
   createAndSaveUser,
+  fetchUsers,
 };

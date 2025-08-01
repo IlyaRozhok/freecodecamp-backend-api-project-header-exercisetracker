@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 require("dotenv").config();
-const { createAndSaveUser } = require("./model/User");
+const { createAndSaveUser, fetchUsers } = require("./model/User");
 
 const mongoose = require("mongoose");
 
@@ -30,6 +30,15 @@ app.post("/api/users", async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to create user" });
+  }
+});
+
+app.get("/api/users", async (req, res) => {
+  try {
+    const allUsers = await fetchUsers();
+    console.log("ALL USERS", allUsers);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch users" });
   }
 });
 
