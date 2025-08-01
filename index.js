@@ -3,6 +3,7 @@ const app = express();
 const cors = require("cors");
 require("dotenv").config();
 const { createAndSaveUser, fetchUsers } = require("./model/User");
+const { createExercise } = require("./model/Exercise");
 
 const mongoose = require("mongoose");
 
@@ -14,7 +15,7 @@ mongoose.connect(process.env.MONGO_URI, {
 app.use(cors());
 app.use(express.static("public"));
 app.use(express.urlencoded({ extended: false }));
-
+app.use(express.json());
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/views/index.html");
 });
@@ -37,8 +38,21 @@ app.get("/api/users", async (req, res) => {
   try {
     const allUsers = await fetchUsers();
     console.log("ALL USERS", allUsers);
+    res.json(allUsers);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch users" });
+  }
+});
+
+app.post("/api/users/:_id/exercises", async (req, res) => {
+  try {
+    const id = req.params._id;
+    const { description, duration, date } = req.body;
+    const payload = { description, duration, date, _id: id };
+    const createdExercise = await createExercise(payload);
+    res.json(createdExercise);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to create an exercise" });
   }
 });
 

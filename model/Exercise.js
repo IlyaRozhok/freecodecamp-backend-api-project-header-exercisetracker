@@ -1,11 +1,20 @@
 const mongoose = require("mongoose");
 
 const exerciseSchema = new mongoose.Schema({
-  name: String,
-  description: String,
-  duration: Number,
-  date: String
+  description: { type: String },
+  duration: { type: Number },
+  date: { type: String },
+  _id: { type: String },
 });
 
-export const Exercise = mongoose.model("Exercise", exerciseSchema);
+const Exercise = mongoose.model("Exercise", exerciseSchema);
 
+const createExercise = async (exercise) => {
+  const date = exercise.date ?? new Date().toDateString();
+  const createdExercise = new Exercise({ ...exercise, date });
+  return await createdExercise.save();
+};
+
+module.exports = {
+  createExercise,
+};

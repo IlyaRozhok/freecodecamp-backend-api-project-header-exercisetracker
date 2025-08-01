@@ -12,7 +12,7 @@ const createAndSaveUser = async (userName) => {
 };
 
 const fetchUsers = async () => {
-  const users = User.find();
+  const users = User.find().select("username _id");
   return await users;
 };
 
